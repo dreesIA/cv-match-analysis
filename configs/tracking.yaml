@@ -1,0 +1,15 @@
+# Tracking config — ByteTrack params (plan §6). A tracker change silently shifts
+# every downstream track-based metric, so changing these is a deliberate, tested act.
+byte_track:
+  track_activation_threshold: 0.25   # min det conf to start/continue a track
+  lost_track_buffer: 30              # frames a lost track survives before deletion
+  minimum_matching_threshold: 0.80   # IoU/assoc threshold
+  frame_rate: 25                     # set to the normalized fps from ingestion
+
+ball:
+  buffer_size: 20                    # ball-trajectory smoothing window (sports example)
+
+# Re-ID (plan §6.2) — off for MVP; appearance-embedding re-id is a later add-on.
+reid:
+  enabled: false
+  appearance_sim_threshold: 0.7

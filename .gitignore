@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Models & large data (tracked out-of-band; see README)
+data/models/
+data/raw_matches/
+*.pt
+*.mp4
+*.avi
+*.mov
+
+# Golden set: keep annotations + manifest, ignore raw media
+data/golden_set/**/*.mp4
+data/golden_set/**/*.avi
+
+# Outputs
+outputs/
+*.parquet
+runs/
+
+# Env / secrets
+.env
+
+# OS
+.DS_Store

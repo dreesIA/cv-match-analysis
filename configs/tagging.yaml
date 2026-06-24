@@ -1,0 +1,39 @@
+# Tagging config — all thresholds live here (plan §10.3 requires per-event-type
+# tuning on validation data; never hardcode these in src/).
+units: meters                        # pitch coords are projected to metres (cm/100)
+
+possession:
+  control_radius_m: 1.8              # player "controls" ball within this metric radius
+  control_min_frames: 3             # sustained frames to confirm control
+  ball_rel_speed_max_mps: 8.0       # ball moving slower than this relative to player
+  hysteresis_frames: 5              # stickiness to stop team label flapping
+
+possession_change:
+  min_control_frames: 8             # new team must hold control this long (no single deflection)
+
+pass:
+  min_separation_m: 2.0             # ball must leave passer by at least this
+  receiver_window_s: 4.0            # max time to a teammate gaining control
+  # receiver = same team -> completed; opponent -> interception/turnover; none -> incomplete
+
+carry:
+  min_displacement_m: 3.0
+  min_frames: 8
+
+zones:                               # pitch is 120 m (length) x 70 m (width)
+  attacking_third_x_m: 80.0
+  halfway_x_m: 60.0
+
+confidence:                          # per-event aggregate = weighted combine of components
+  weights: {detection: 0.30, tracking: 0.20, team: 0.20, calibration: 0.30}
+  combine: weighted_geomean          # weighted_geomean | weighted_mean | min
+  thresholds:                        # routing: >=auto_accept -> accept; >=review -> queue; else hidden
+    possession:        {auto_accept: 0.75, review: 0.45}
+    possession_change: {auto_accept: 0.80, review: 0.50}
+    pass:              {auto_accept: 0.75, review: 0.45}
+    carry:             {auto_accept: 0.70, review: 0.40}
+    zone_entry:        {auto_accept: 0.75, review: 0.45}
+
+no_ball:
+  max_gap_frames: 5                  # frames without a valid ball before possession = unknown
+                                     # (no events are emitted across these gaps — plan §5.3)

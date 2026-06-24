@@ -1,0 +1,10 @@
+# Evaluation-only dependencies (heavier / optional). Install after core works:
+#   pip install -r requirements-eval.txt
+
+motmetrics>=1.4.0        # MOTA / IDF1
+# HOTA via TrackEval (no PyPI release — install from git when needed):
+#   pip install git+https://github.com/JonathonLuiten/TrackEval.git
+
+# Optional: hosted Roboflow Universe model serving (heavy on arm64; only needed
+# if you don't supply local .pt weights). The detection wrapper works without it.
+# inference>=0.21.0

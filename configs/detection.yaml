@@ -1,0 +1,37 @@
+# Detection config — Roboflow Universe models (player/GK/ref/ball + dedicated ball).
+# The wrapper loads `local_weights` (ultralytics .pt) if present; otherwise falls
+# back to the Roboflow-hosted model via `inference.get_model(roboflow_id)`.
+device: mps                       # Apple M1; falls back to cpu automatically if unavailable
+
+models:
+  players:
+    roboflow_id: football-players-detection-3zvbc/12
+    local_weights: data/models/players.pt
+    imgsz: 1280                   # higher res helps small/distant players
+    conf: 0.30
+  ball:                           # dedicated higher-recall ball model + slicing
+    roboflow_id: football-ball-detection-rejhg/4
+    local_weights: data/models/ball.pt
+    imgsz: 640
+    conf: 0.30
+    slice_wh: [640, 640]          # InferenceSlicer tiling for small-object recall
+    nms: 0.10
+  pitch:
+    roboflow_id: football-field-detection-f07vi/15
+    local_weights: data/models/pitch.pt
+    conf: 0.50
+
+# Detection class ids (from the players model — see roboflow/sports examples/soccer)
+class_map:
+  ball: 0
+  goalkeeper: 1
+  player: 2
+  referee: 3
+
+# Per-class confidence thresholds we actually DEPLOY at (tune on validation, not F1).
+# Ball is kept low-but-honest: below this we emit a "no valid ball" flag, never a guess.
+deploy_conf:
+  ball: 0.30
+  goalkeeper: 0.40
+  player: 0.40
+  referee: 0.40
