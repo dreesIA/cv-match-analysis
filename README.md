@@ -1,4 +1,4 @@
-# updt.pro CV MVP — Assisted Tagging Pipeline
+# CV Match Analysis
 
 Perception + assisted-tagging MVP for soccer match video, built on **Roboflow
 Universe models + Supervision**. It ingests a clip and emits a structured **event

@@ -14,7 +14,7 @@ from src.showcase.player import build_player_html, video_data_uri
 
 
 st.set_page_config(
-    page_title="updt.pro · Training intelligence",
+    page_title="CV Match Analysis",
     page_icon="⚽",
     layout="wide",
     initial_sidebar_state="expanded",

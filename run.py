@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""CLI entrypoint for the updt.pro CV MVP pipeline.
+"""CLI entrypoint for the CV Match Analysis pipeline.
 
 Examples:
   python run.py --source data/raw_matches/sample.mp4 --max-frames 750
@@ -13,7 +13,7 @@ from src.pipeline import run
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="updt.pro CV MVP — assisted tagging pipeline")
+    ap = argparse.ArgumentParser(description="CV Match Analysis — assisted tagging pipeline")
     ap.add_argument("--source", required=True, help="path to match video")
     ap.add_argument("--output-dir", default="outputs", help="where to write events + summary")
     ap.add_argument("--stride", type=int, default=1, help="process every Nth frame")
