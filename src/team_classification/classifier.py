@@ -31,17 +31,20 @@ class TeamClassifierWrapper:
         self.model = TeamClassifier(device=device, batch_size=batch_size)
         self._warmup_crops: list[np.ndarray] = []
         self._fitted = False
+        self.n_fit_samples = 0
         # per-track vote tallies: track_id -> {team_id: count}
         self._votes: dict[int, dict[int, int]] = defaultdict(lambda: defaultdict(int))
 
     # ---- warmup ----
     def collect(self, crops: list[np.ndarray], cap: int = 750) -> None:
-        if len(self._warmup_crops) < cap:
-            self._warmup_crops.extend(crops)
+        remaining = max(0, cap - len(self._warmup_crops))
+        if remaining:
+            self._warmup_crops.extend(crops[:remaining])
 
     def fit(self) -> None:
         if not self._warmup_crops:
             raise RuntimeError("No warmup crops collected; cannot fit team classifier.")
+        self.n_fit_samples = len(self._warmup_crops)
         self.model.fit(self._warmup_crops)
         self._fitted = True
         self._warmup_crops = []  # free memory

@@ -51,7 +51,7 @@ def build_calibration(keypoints: sv.KeyPoints, kp_conf_threshold: float = 0.5) -
     if keypoints is None or len(keypoints.xy) == 0:
         return None
     xy = np.asarray(keypoints.xy[0], dtype=np.float32)  # (K, 2)
-    conf = keypoints.confidence
+    conf = getattr(keypoints, "keypoint_confidence", None)
     if conf is not None and len(conf) > 0:
         mask = np.asarray(conf[0]) > kp_conf_threshold
     else:  # fallback: undetected points come back as (0,0)

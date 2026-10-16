@@ -9,8 +9,16 @@ data/models/
 data/raw_matches/
 *.pt
 *.mp4
+*.m4v
 *.avi
 *.mov
+
+# Keep only the two compact, browser-ready showcase pairs deployable.
+!data/showcase/bundesliga/08fd33_0/showcase.m4v
+!data/showcase/bundesliga/08fd33_0/radar_combined.m4v
+!data/showcase/bundesliga/0bfacc_0/showcase.m4v
+!data/showcase/bundesliga/0bfacc_0/radar_combined.m4v
+data/showcase/**/frame_states.pkl
 
 # Golden set: keep annotations + manifest, ignore raw media
 data/golden_set/**/*.mp4

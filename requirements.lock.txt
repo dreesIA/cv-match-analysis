@@ -1,5 +1,7 @@
 annotated-doc==0.0.4
 anyio==4.14.0
+altair==6.3.0
+attrs==26.1.0
 beautifulsoup4==4.15.0
 certifi==2026.6.17
 charset-normalizer==3.4.7
@@ -17,8 +19,11 @@ httpcore==1.0.9
 httpx==0.28.1
 huggingface_hub==1.20.1
 idna==3.18
+itsdangerous==2.2.0
 Jinja2==3.1.6
 joblib==1.5.3
+jsonschema==4.26.0
+jsonschema-specifications==2025.9.1
 kiwisolver==1.5.0
 llvmlite==0.47.0
 markdown-it-py==4.2.0
@@ -40,16 +45,20 @@ polars-runtime-32==1.42.0
 protobuf==7.35.1
 psutil==7.2.2
 pyarrow==24.0.0
+pydeck==0.9.3
 pyDeprecate==0.9.0
 Pygments==2.20.0
 pynndescent==0.6.0
 pyparsing==3.3.2
 PySocks==1.7.1
 python-dateutil==2.9.0.post0
+python-multipart==0.0.32
 PyYAML==6.0.3
+referencing==0.37.0
 regex==2026.5.9
 requests==2.34.2
 rich==15.0.0
+rpds-py==2026.9.1
 safetensors==0.8.0
 scikit-learn==1.9.0
 scipy==1.17.1
@@ -59,6 +68,8 @@ shellingham==1.5.4
 six==1.17.0
 soupsieve==2.8.4
 sports @ git+https://github.com/roboflow/sports.git@42c80c06b6b65a7f89455b89fe31cdf4c38ba227
+starlette==1.8.0
+streamlit==1.66.0
 supervision==0.29.1
 sympy==1.14.0
 threadpoolctl==3.6.0
@@ -73,4 +84,6 @@ ultralytics==8.4.76
 ultralytics-thop==2.0.20
 umap-learn==0.5.12
 urllib3==2.7.0
+uvicorn==0.54.0
+websockets==17.2
 wheel==0.47.0

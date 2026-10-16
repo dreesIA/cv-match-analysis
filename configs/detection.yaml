@@ -14,7 +14,10 @@ models:
     local_weights: data/models/ball.pt
     imgsz: 640
     conf: 0.30
-    slice_wh: [640, 640]          # InferenceSlicer tiling for small-object recall
+    slice_wh: [384, 384]          # InferenceSlicer tiling for small-object recall
+                                  # (was 640; finer tiles help distant/far-side ball
+                                  #  recall on wide tactical cams — see E-01b. More
+                                  #  tiles = a bit slower per frame.)
     nms: 0.10
   pitch:
     roboflow_id: football-field-detection-f07vi/15

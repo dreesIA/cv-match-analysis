@@ -37,6 +37,7 @@ class PlayerTracker:
         self._tracker, self._mode = self._make_tracker(bt)
         self.stability: dict[int, TrackStability] = {}
         self._last_seen: dict[int, int] = {}
+        self._tick = -1
 
     @staticmethod
     def _make_tracker(bt: dict[str, Any]):
@@ -57,7 +58,11 @@ class PlayerTracker:
             tracked = self._tracker.update_with_detections(detections)
         else:
             tracked = self._tracker.update(detections)
-        self._record_stability(tracked, frame_idx)
+        # Stability is measured in processed frames.  Raw frame indices jump when
+        # inference uses a stride, which previously made every healthy track look
+        # sparse and artificially depressed event confidence.
+        self._tick += 1
+        self._record_stability(tracked, self._tick)
         return tracked
 
     def _record_stability(self, det: sv.Detections, frame_idx: int) -> None:

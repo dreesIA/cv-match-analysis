@@ -71,12 +71,31 @@ class _Model:
         result = self.model.infer(image, confidence=conf)[0]
         return sv.Detections.from_inference(result)
 
+    def detect_batch(
+        self,
+        images: list[np.ndarray],
+        conf: float,
+        imgsz: int | None = None,
+    ) -> list[sv.Detections]:
+        if self.backend != "ultralytics":
+            return [self.detect(image, conf=conf, imgsz=imgsz) for image in images]
+        kw: dict[str, Any] = {"conf": conf, "device": self.device, "verbose": False}
+        if imgsz:
+            kw["imgsz"] = imgsz
+        return [sv.Detections.from_ultralytics(result) for result in self.model.predict(images, **kw)]
+
     def keypoints(self, image: np.ndarray, conf: float) -> sv.KeyPoints:
         if self.backend == "ultralytics":
             result = self.model.predict(image, conf=conf, device=self.device, verbose=False)[0]
             return sv.KeyPoints.from_ultralytics(result)
         result = self.model.infer(image, confidence=conf)[0]
         return sv.KeyPoints.from_inference(result)
+
+    def keypoints_batch(self, images: list[np.ndarray], conf: float) -> list[sv.KeyPoints]:
+        if self.backend != "ultralytics":
+            return [self.keypoints(image, conf=conf) for image in images]
+        results = self.model.predict(images, conf=conf, device=self.device, verbose=False)
+        return [sv.KeyPoints.from_ultralytics(result) for result in results]
 
 
 @dataclass
@@ -116,15 +135,59 @@ class Detector:
         det = self.players.detect(image, conf=pm["conf"], imgsz=pm.get("imgsz"))
         return self._filter_players(det)
 
-    def detect(self, image: np.ndarray) -> FrameDetections:
+    def players_only_batch(self, images: list[np.ndarray]) -> list[sv.Detections]:
+        """Batched form of :meth:`players_only` for GPU-efficient warmup."""
         pm = self.cfg["models"]["players"]
-        players = self.players.detect(image, conf=pm["conf"], imgsz=pm.get("imgsz"))
-        players = self._filter_players(players)
+        detections = self.players.detect_batch(images, conf=pm["conf"], imgsz=pm.get("imgsz"))
+        return [self._filter_players(det) for det in detections]
 
-        ball_xy, ball_conf = self._detect_ball(image)
+    def detect(self, image: np.ndarray) -> FrameDetections:
+        return self.detect_batch([image])[0]
 
-        keypoints = self.pitch.keypoints(image, conf=self.cfg["models"]["pitch"]["conf"])
-        return FrameDetections(players=players, ball_xy=ball_xy, ball_conf=ball_conf, keypoints=keypoints)
+    def detect_players_batch(self, images: list[np.ndarray]) -> list[sv.Detections]:
+        """Player/GK/referee detections for high-rate tracking."""
+        pm = self.cfg["models"]["players"]
+        detections = self.players.detect_batch(
+            images, conf=pm["conf"], imgsz=pm.get("imgsz")
+        )
+        return [self._filter_players(det) for det in detections]
+
+    def detect_balls_batch(
+        self, images: list[np.ndarray]
+    ) -> list[tuple[Optional[tuple[float, float]], float]]:
+        """Dedicated ball detections, separable from the player-frame cadence."""
+        spec = self.cfg["models"]["ball"]
+        if spec.get("inference", "sliced") == "full_frame":
+            detections = self.ball.detect_batch(
+                images,
+                conf=spec.get("conf", 0.3),
+                imgsz=spec.get("imgsz", 1280),
+            )
+            return [
+                self._best_ball(det.with_nms(threshold=spec.get("nms", 0.1)))
+                for det in detections
+            ]
+        return [self._detect_ball(image) for image in images]
+
+    def detect_keypoints_batch(self, images: list[np.ndarray]) -> list[sv.KeyPoints]:
+        """Pitch landmarks, separable from the player-frame cadence."""
+        spec = self.cfg["models"]["pitch"]
+        return self.pitch.keypoints_batch(images, conf=spec["conf"])
+
+    def detect_batch(self, images: list[np.ndarray]) -> list[FrameDetections]:
+        """Run all three local models in batches, preserving frame order."""
+        players = self.detect_players_batch(images)
+        balls = self.detect_balls_batch(images)
+        keypoints = self.detect_keypoints_batch(images)
+        return [
+            FrameDetections(
+                players=player_det,
+                ball_xy=ball[0],
+                ball_conf=ball[1],
+                keypoints=keypoint_det,
+            )
+            for player_det, ball, keypoint_det in zip(players, balls, keypoints)
+        ]
 
     def _filter_players(self, det: sv.Detections) -> sv.Detections:
         """Drop the ball class from the players model and apply per-class deploy conf."""
@@ -141,8 +204,24 @@ class Detector:
         return det[det.confidence >= thr]
 
     def _detect_ball(self, image: np.ndarray) -> tuple[Optional[tuple[float, float]], float]:
-        nms = self.cfg["models"]["ball"].get("nms", 0.1)
-        det = self._ball_slicer(image).with_nms(threshold=nms)
+        spec = self.cfg["models"]["ball"]
+        nms = spec.get("nms", 0.1)
+        if spec.get("inference", "sliced") == "full_frame":
+            # A 1280px full-frame pass is the practical batch-showcase profile:
+            # it is still the dedicated ball detector, but avoids running the
+            # network once per overlapping tile.  The default remains tiled for
+            # maximum far-ball recall.
+            det = self.ball.detect(
+                image,
+                conf=spec.get("conf", 0.3),
+                imgsz=spec.get("imgsz", 1280),
+            ).with_nms(threshold=nms)
+        else:
+            det = self._ball_slicer(image).with_nms(threshold=nms)
+        return self._best_ball(det)
+
+    def _best_ball(self, det: sv.Detections) -> tuple[Optional[tuple[float, float]], float]:
+        """Select the highest-confidence ball candidate and apply the deploy gate."""
         if len(det) == 0:
             return None, 0.0
         best = int(np.argmax(det.confidence))

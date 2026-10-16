@@ -1,34 +1,3 @@
-# updt.pro CV MVP — core dependencies (Apple M1 / Python 3.12)
-#
-# Versions are RANGES here; after a successful install we freeze the exact
-# resolved set into requirements.lock.txt (`pip freeze`) for true reproducibility.
-# See plan §6.1 / §12.2: treat any tracker/Supervision upgrade as a deliberate,
-# tested change — not a routine `pip install --upgrade`.
-
-# --- Perception backbone (Roboflow sports: TeamClassifier, ViewTransformer,
-#     SoccerPitchConfiguration). Pulls supervision/transformers/umap transitively. ---
-sports @ git+https://github.com/roboflow/sports.git
-
-# --- Core CV / tracking ---
-# IMPORTANT: sv.ByteTrack is deprecated in 0.28 and REMOVED in 0.30 (logic moves to
-# the separate `trackers` package). `sports` currently resolves supervision==0.29.1,
-# where sv.ByteTrack still exists. The <0.30 cap guarantees the build can't silently
-# pull the version that deletes it; exact resolved set is in requirements.lock.txt.
-# Our tracking wrapper is adaptive (sv.ByteTrack, else trackers.ByteTrackTracker).
-supervision>=0.26.0,<0.30
-ultralytics>=8.3.0,<9
-opencv-python>=4.9,<5
-
-# --- Team classification (SigLIP -> UMAP -> KMeans) ---
-torch>=2.2
-transformers>=4.40
-umap-learn>=0.5.5
-scikit-learn>=1.4
-
-# --- Data / utils ---
-numpy>=1.26,<2          # pin <2 for umap/numba stability on arm64
-pandas>=2.0
-pyarrow>=15             # parquet event log
-pyyaml>=6.0
-tqdm>=4.66
-gdown>=5.1              # sample-clip download
+# Streamlit deployment runtime. The dashboard consumes checked-in CV artifacts;
+# model inference dependencies live in requirements-cv.txt.
+streamlit>=1.39,<2

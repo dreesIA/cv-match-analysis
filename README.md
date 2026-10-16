@@ -33,7 +33,7 @@ confidence routing, and evaluation harness** are this repo's contribution.
 ```bash
 brew install ffmpeg                              # reliable video I/O (required)
 python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt                  # exact pins in requirements.lock.txt
+pip install -r requirements-cv.txt               # exact pins in requirements.lock.txt
 python scripts/download_assets.py                # weights + one DFL sample clip (no API key)
 ```
 
@@ -54,6 +54,38 @@ python run.py --source data/raw_matches/2e57b9_0.mp4 --max-frames 60 --output-di
 
 Outputs: `outputs/<run>/events.json` (+ `.parquet`) and `run_summary.json`
 (event counts by type/status, ball-valid fraction, calibration coverage).
+
+## Interactive Bundesliga showcase
+
+The Streamlit showcase is limited to two quality-gated, full-rate DFL/Bundesliga
+clips and keeps each tracking video synchronized with its paired tactical-map
+render and cumulative pass, carry, and possession-gain views. Passes on the
+action-location pitch use the same blue/red team colors as the CV overlays.
+
+Run:
+
+```bash
+streamlit run streamlit_app.py
+```
+
+The compact browser-safe M4V assets under `data/showcase/bundesliga/` are kept
+with the deployable app. Raw footage, MP4 intermediates, model weights, and
+per-frame inference caches remain ignored.
+
+The checked-in clips run player detection and ByteTrack on every source frame
+(25 FPS). The small-object ball model and pitch calibration run every fifth
+frame; ball positions are interpolated only between two valid measurements,
+retain an explicit `observed=false` flag, and receive a confidence penalty.
+Interpolation is disabled across camera cuts. Event tagging uses these same
+frame states—there is no separate hand-authored showcase path.
+
+```bash
+python scripts/render_video.py --source <bundesliga.mp4> \
+    --output-dir <bundle-dir> --stride 1 --device mps --batch-size 8 \
+    --ball-inference full_frame --ball-imgsz 1536 --ball-every 5 \
+    --pitch-every 5 --player-imgsz 640 --classify-every 10 \
+    --only showcase,radar_combined
+```
 
 ## Validate (the point of the project — plan §10)
 

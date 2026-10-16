@@ -21,6 +21,7 @@ class BallObservation:
     confidence: float = 0.0
     xy_pixel: Optional[tuple[float, float]] = None      # ball center, pixels
     xy_pitch_m: Optional[tuple[float, float]] = None     # projected metric coords
+    observed: bool = True                               # detector measurement vs interpolation
 
 
 @dataclass
@@ -43,6 +44,13 @@ class FrameState:
     calibration_confidence: float                        # 0.0 if no valid homography
     players: list[PlayerObservation] = field(default_factory=list)
     ball: Optional[BallObservation] = None
+    # detected pitch landmarks, kept for the keypoint overlay (visualization only).
+    # plain arrays so FrameState stays pickle-safe and free of an sv dependency.
+    pitch_keypoints_xy: Optional[Any] = None             # (K, 2) float, pixel coords
+    pitch_keypoints_conf: Optional[Any] = None           # (K,) float, per-keypoint conf
+    calibration_m: Optional[Any] = None                  # 3x3 homography, pixel -> metres
+                                                         # (None if uncalibrated). inv() warps
+                                                         # pitch overlays onto the frame.
 
     def player_by_track(self, track_id: int) -> Optional[PlayerObservation]:
         for p in self.players:
