@@ -1,5 +1,7 @@
 # CV Match Analysis
 
+https://cv-match-analysis.streamlit.app
+
 Perception + assisted-tagging MVP for soccer match video, built on **Roboflow
 Universe models + Supervision**. It ingests a clip and emits a structured **event
 log** (possession, possession changes, passes, carries, zone entries) where every
